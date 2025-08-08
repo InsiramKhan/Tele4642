@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Search Results - IntelliHome SDN</title>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    // Pre-fill the search input from query string
+    window.onload = function () {
+      const params = new URLSearchParams(window.location.search);
+      const q = params.get("q");
+      if (q) document.getElementById("search-input").value = q;
+    };
+
+    function goSearch(event) {
+      event.preventDefault();
+      const input = document.getElementById("search-input").value.trim();
+      if (input) {
+        window.location.href = `results.html?q=${encodeURIComponent(input)}`;
+      }
+      return false;
+    }
+  </script>
+</head>
+<body>
+  <div class="results-page">
+    <!-- Top search bar -->
+    <div class="search-bar">
+      <a href="index.html">
+        <img src="assets/google-logo.png" alt="Logo" class="logo-small" />
+      </a>
+      <form onsubmit="return goSearch(event)">
+        <input
+          type="text"
+          name="q"
+          id="search-input"
+          placeholder="Search IntelliHome SDN..."
+        />
+        <button type="submit">
+          <img src="assets/search-icon.svg" alt="Search" />
+        </button>
+      </form>
+    </div>
+
+    <!-- Results -->
+    <div class="search-results">
+      <div class="result">
+        <a href="overview.html" class="result-title">Project Overview – IntelliHome SDN</a>
+        <div class="result-url">intellihome.netlify.app/overview.html</div>
+        <p class="result-snippet">
+          Understand the motivation behind SDN for smart homes and the goals of adaptive flow control.
+        </p>
+      </div>
+
+      <div class="result">
+        <a href="architecture.html" class="result-title">System Architecture – IntelliHome SDN</a>
+        <div class="result-url">intellihome.netlify.app/architecture.html</div>
+        <p class="result-snippet">
+          Explore the modular architecture involving MUD parsing, ML classification, and REST-based flow control.
+        </p>
+      </div>
+
+      <div class="result">
+        <a href="ml.html" class="result-title">Machine Learning – IntelliHome SDN</a>
+        <div class="result-url">intellihome.netlify.app/ml.html</div>
+        <p class="result-snippet">
+          Learn how we trained a Random Forest classifier using flow data to detect anomalies in real time.
+        </p>
+      </div>
+
+      <div class="result">
+        <a href="pagerank.html" class="result-title">PageRank Flow Scoring – IntelliHome SDN</a>
+        <div class="result-url">intellihome.netlify.app/pagerank.html</div>
+        <p class="result-snippet">
+          Discover how trust scores for each flow are computed using NetworkX and used to prioritize traffic.
+        </p>
+      </div>
+
+      <div class="result">
+        <a href="demo.html" class="result-title">Live Demo – IntelliHome SDN</a>
+        <div class="result-url">intellihome.netlify.app/demo.html</div>
+        <p class="result-snippet">
+          Watch a demonstration of the system reacting to valid and malicious traffic scenarios using SDN control.
+        </p>
+      </div>
+
+      <div class="result">
+        <a href="results_eval.html" class="result-title">Results & Evaluation – IntelliHome SDN</a>
+        <div class="result-url">intellihome.netlify.app/results_eval.html</div>
+        <p class="result-snippet">
+          View performance metrics such as ML accuracy, flow install time, and policy enforcement outcomes.
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

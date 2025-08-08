@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>System Architecture – IntelliHome SDN</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <header class="subpage-header">
+    <a href="index.html">
+      <img src="assets/google-logo.png" alt="IntelliHome SDN" class="logo-small" />
+    </a>
+      <nav class="main-nav">
+        <a href="overview.html">Overview</a>
+        <a href="architecture.html">Architecture</a>
+        <a href="ml.html">ML</a>
+        <a href="pagerank.html">PageRank</a>
+        <a href="demo.html">Demo</a>
+        <a href="results_eval.html">Results</a>
+      </nav>
+  </header>
+
+  <main class="content-wrapper">
+    <h1>System Architecture</h1>
+
+    <section>
+      <h2>Architecture Overview</h2>
+      <p>
+        IntelliHome SDN is built as a modular and programmable network control framework using SDN principles. The core system is powered by the Ryu controller and interacts dynamically with IoT devices in a smart-home environment through OpenFlow-enabled switches.
+      </p>
+    </section>
+
+    <section>
+      <h2>System Diagram</h2>
+      <p>
+        The following diagram illustrates the core components and data flow within IntelliHome SDN:
+      </p>
+      <img src="assets/architecture-diagram.png" alt="System Architecture Diagram" class="diagram" />
+      <p style="font-size: 14px; color: #888;"></p>
+    </section>
+
+    <section>
+      <h2>Component Breakdown</h2><br>
+
+      <h3>1. Ryu Controller</h3><br>
+      <p>
+        Acts as the SDN brain. Receives packet-in events from switches, processes flow rules, and issues instructions dynamically. Integrates with MUD, ML, and trust modules to inform decisions.
+      </p><br>
+
+      <h3>2. MUD Policy Parser</h3><br>
+      <p>
+        Extracts access control information from device-specific Manufacturer Usage Description (MUD) JSON files. Validates flow behavior against expected communication patterns and enforces rule violations.
+      </p><br>
+
+      <h3>3. Machine Learning Classifier</h3><br>
+      <p>
+        A <code>RandomForestClassifier</code> trained on flow-level features like source/destination IP, ports, protocol, and byte count. Classifies flows in real time as benign or malicious and flags them for action.
+      </p><br>
+
+      <h3>4. PageRank Trust Engine</h3><br>
+      <p>
+        Builds a graph of active flows, where each node represents a host or device, and edges represent communication. Uses <code>networkx.pagerank()</code> to assign trust scores to flows based on volume, consistency, and reputation.
+      </p><br>
+
+      <h3>5. REST API and Dashboard (Optional)</h3><br>
+      <p>
+        Exposes flow statistics and alerts via a RESTful interface. Can be visualized using a Flask dashboard or consumed by external monitoring tools.
+      </p><br>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-left">IntelliHome SDN – TELE4642 UNSW</div>
+    <div class="footer-right">
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+    </div>
+  </footer>
+</body>
+</html>

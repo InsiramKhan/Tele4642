@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>IntelliHome SDN</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="assets/favicon.png">
+</head>
+<script src="script.js"></script>
+<body>
+  <div class="page">
+    <header>
+      <div class="nav-links">
+        
+        <a href="https://unsw.edu.au" target="_blank">About</a>
+        <a href="https://github.com" target="_blank">GitHub</a>
+      </div>
+    </header>
+    
+    <main class="main-content">
+      <div class="homepage-wrapper">
+        <img src="assets/google-logo.png" alt="IntelliHome SDN" class="logo" />
+
+        <div class="search-box">
+          <form action="results.html" method="get" onsubmit="return goSearch(event)">
+            <input type="text" name="q" id="search-input" placeholder="Search IntelliHome SDN...">
+            <button type="submit"><img src="assets/search-icon.png" alt="Search"></button>
+          </form>
+        </div>
+
+        <div class="shortcuts">
+          <a href="overview.html">
+            <img src="assets/overview-icon.jpg" alt="Overview">
+            <span>Overview</span>
+          </a>
+          <a href="architecture.html">
+            <img src="assets/architecture-icon.png" alt="Architecture">
+            <span>Architecture</span>
+          </a>
+          <a href="ml.html">
+            <img src="assets/ml-icon.png" alt="Machine Learning">
+            <span>ML</span>
+          </a>
+          <a href="pagerank.html">
+            <img src="assets/pagerank-icon.jpg" alt="PageRank">
+            <span>PageRank</span>
+          </a>
+          <a href="demo.html">
+            <img src="assets/demo-icon.jpg" alt="Demo">
+            <span>Demo</span>
+          </a>
+          <a href="results_eval.html">
+            <img src="assets/results-icon.png" alt="Results">
+            <span>Results</span>
+          </a>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <div class="footer-left">Australia</div>
+      <div class="footer-right">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Credits</a>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    function goSearch(event) {
+      event.preventDefault();
+      const input = document.getElementById("search-input").value.trim();
+      if (input) {
+        window.location.href = `results.html?q=${encodeURIComponent(input)}`;
+      }
+      return false;
+    }
+  </script>
+</body>
+</html>
