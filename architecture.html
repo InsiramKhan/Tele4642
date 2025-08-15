@@ -24,10 +24,25 @@
     <h1>System Architecture</h1>
 
     <section>
-      <h2>Architecture Overview</h2>
-      <p>
-        IntelliHome SDN is built as a modular and programmable network control framework using SDN principles. The core system is powered by the Ryu controller and interacts dynamically with IoT devices in a smart-home environment through OpenFlow-enabled switches.
-      </p>
+        <h2>1) High‑Level Design</h2><br>
+          <p>
+            IntelliHome separates the <em>control plane</em> (Ryu apps + policy/analytics) from the <em>data plane</em> (Open vSwitches in Mininet).
+            Packets traverse programmable switches, followed by decisions (allow/blocked/malicious/benign) made centrally using MUD policy checks, ML inference, 
+            and a PageRank‑style trust score.
+          </p><br>
+          <ul>
+            <li><strong>Data Plane:</strong> Mininet virtual switches (OpenFlow 1.3), IoT hosts, Internet gateway.</li><br>
+            <li><strong>Control Plane:</strong> Ryu controller with modular apps:
+              <ul><br>
+                <li>Topology & Flow Monitor</li>
+                <li>MUD Policy Engine</li>
+                <li>ML Inference Engine</li>
+                <li>Trust Scoring (PageRank)</li>
+                <li>REST API (Northbound) for UI</li>
+              </ul>
+            </li><br>
+            <li><strong>Presentation Layer:</strong> This website (status, logs, charts, demo).</li>
+          </ul>
     </section>
 
     <section>
@@ -39,34 +54,184 @@
       <p style="font-size: 14px; color: #888;"></p>
     </section>
 
-    <section>
-      <h2>Component Breakdown</h2><br>
+    <section id="architecture">
+        
 
-      <h3>1. Ryu Controller</h3><br>
-      <p>
-        Acts as the SDN brain. Receives packet-in events from switches, processes flow rules, and issues instructions dynamically. Integrates with MUD, ML, and trust modules to inform decisions.
-      </p><br>
+        <!-- Module wiring: point to real files in the repo -->
+        <h2>Module Map (This Project)</h2>
+        <ul>
+          <li><strong>Ryu App:</strong> <code>ryu_project.py</code> — main OpenFlow 1.3 controller (<code>SimpleSwitchRouting</code>), REST (<code>MudRestController</code>).</li>
+          <li><strong>MUD Policy Data:</strong> <code>mud_policy</code> — device allowlists (see “MUD Policy Engine”).</li>
+          <li><strong>ML Inference:</strong> <code>model_engine.py</code> — <code>classify_flow(features)</code>, loads <code>rf_model.pkl</code> via joblib/pandas.</li>
+        </ul>
 
-      <h3>2. MUD Policy Parser</h3><br>
-      <p>
-        Extracts access control information from device-specific Manufacturer Usage Description (MUD) JSON files. Validates flow behavior against expected communication patterns and enforces rule violations.
-      </p><br>
 
-      <h3>3. Machine Learning Classifier</h3><br>
-      <p>
-        A <code>RandomForestClassifier</code> trained on flow-level features like source/destination IP, ports, protocol, and byte count. Classifies flows in real time as benign or malicious and flags them for action.
-      </p><br>
+        <!-- ===== High-Level View ===== -->
+        
+        <p>
+          The Ryu app in <code>ryu_project.py</code> drives the control plane. Switches (OVS) form the data plane in Mininet. 
+          For each new flow: <em>MUD</em> baseline check → <em>ML</em> inference via <code>model_engine.classify_flow</code> → <em>Trust</em> (PageRank) → fused decision → OpenFlow rules.
+        </p>
 
-      <h3>4. PageRank Trust Engine</h3><br>
-      <p>
-        Builds a graph of active flows, where each node represents a host or device, and edges represent communication. Uses <code>networkx.pagerank()</code> to assign trust scores to flows based on volume, consistency, and reputation.
-      </p><br>
+        <!-- ===== Components ===== -->
+        <h2>2) Components & Responsibilities</h2>
+        <ul>
+          <li><strong>Ryu App (<code>ryu_project.py</code>)</strong>
+            <ul>
+              <li><code>SimpleSwitchRouting</code> — OpenFlow 1.3, topology/mac tables, flow installs, flood detection.</li>
+              <li><code>MudRestController</code> — REST endpoints for UI.</li>
+            </ul>
+          </li>
+          <li><strong>MUD Policy Engine (data-driven)</strong> — loads allowlists from <code>mud_policy</code> (see note below) and enforces device-specific baselines.</li>
+          <li><strong>ML Inference (<code>model_engine.py</code>)</strong> — <code>classify_flow()</code> returns <code>"benign"</code> / <code>"malicious"</code> using <code>rf_model.pkl</code>.</li>
+          <li><strong>Trust Scoring</strong> — NetworkX PageRank (in <code>ryu_project.py</code>) on host-to-host edges; recompute periodically.</li>
+          <li><strong>Northbound REST</strong> — JSON for blocked flows and trust scores (see §6).</li>
+        </ul>
 
-      <h3>5. REST API and Dashboard (Optional)</h3><br>
-      <p>
-        Exposes flow statistics and alerts via a RESTful interface. Can be visualized using a Flask dashboard or consumed by external monitoring tools.
-      </p><br>
-    </section>
+        <!-- ===== Data Flow ===== -->
+        <h2>3) Data & Control Flow</h2>
+        <ol>
+          <li><strong>PacketIn → Ryu.</strong></li>
+          <li><strong>MUD pre-check.</strong> If src⇢dst violates the device baseline from <code>mud_policy</code>, mark and block/quarantine.</li>
+          <li><strong>Feature extraction.</strong> proto, pkt_len, src_port, dst_port (passed to ML).</li>
+          <li><strong>ML inference.</strong> <code>from model_engine import classify_flow</code> → <code>classify_flow(features)</code>.</li>
+          <li><strong>Trust update.</strong> Add edge src→dst to <code>trust_graph</code>, recompute PageRank periodically.</li>
+          <li><strong>Decision.</strong> Fuse MUD ∧ ML ∧ Trust → allow / rate-limit / quarantine / block.</li>
+          <li><strong>Program switch.</strong> Issue <code>flow_mod</code> with timeouts & priority.</li>
+          <li><strong>Expose state.</strong> Append to logs & expose via REST for UI.</li>
+        </ol>
+
+        <!-- ===== OpenFlow Pipeline ===== -->
+        <h2>4) OpenFlow Pipeline (Tables)</h2>
+        <ul>
+          <li><strong>Table 0 — Classify:</strong> match L2/L3/L4; set metadata (device_id); <code>GOTO:10</code>.</li>
+          <li><strong>Table 10 — Policy:</strong> MUD allow/deny & optional meters; <code>GOTO:20</code>.</li>
+          <li><strong>Table 20 — Forward:</strong> output or controller on miss.</li>
+        </ul>
+        <pre><code># conceptual rules installed by ryu_project.py
+      table=0  match:ip_proto=6,tp_dst=443                actions:set_field:device=cam1,GOTO:10
+      table=10 match:device=cam1,policy=allow_tls         actions:meter:1,GOTO:20
+      table=10 match:device=cam1,ip_proto=17,tp_dst=23    actions:drop
+      table=20 match:nw_dst=10.0.0.42                     actions:output:3
+        </code></pre>
+
+        <!-- ===== Decision Fusion ===== -->
+        <h2>5) Decision Logic (Fusion)</h2>
+        <ul>
+          <li><strong>MUD:</strong> <code>ALLOW</code>/<code>DENY</code>/<code>UNKNOWN</code> from <code>mud_policy</code>.</li>
+          <li><strong>ML:</strong> <code>classify_flow()</code> → <code>"benign"</code>/<code>"malicious"</code>.</li>
+          <li><strong>Trust:</strong> normalized PageRank score ∈ [0,1].</li>
+        </ul>
+        <pre><code>// in ryu_project.py (conceptual)
+      if MUD == "DENY":
+        action = DROP
+      elif ML == "malicious":
+        action = QUARANTINE if Trust &lt; 0.2 else DROP
+      elif MUD == "ALLOW" and ML == "benign" and Trust &gt; 0.4:
+        action = ALLOW
+      else:
+        action = RATE_LIMIT
+        </code></pre>
+
+        <!-- ===== REST API ===== -->
+        <h2>6) Northbound REST API (from <code>MudRestController</code>)</h2>
+        <ul>
+          <li><code>GET /mud/blocked</code> → list of blocked/quarantined flows.</li>
+          <li><code>GET /api/trust</code> → current PageRank trust scores.</li>
+        </ul>
+        <pre><code>{
+        "device": "thermostat-1",
+        "flow": "10.0.0.5:443/tcp → 8.8.8.8",
+        "mud": "ALLOW",
+        "ml": "benign",
+        "trust": 0.63,
+        "decision": "ALLOW",
+        "switch": "s1", "table": 20, "priority": 200, "idle_timeout": 60
+      }
+        </code></pre>
+
+        <!-- ===== MUD Engine ===== -->
+        <h2>7) MUD Policy Engine</h2>
+        <ul>
+          <li><strong>Source:</strong> <code>mud_policy</code> file with per-device allowlists (IP/ports/directions).</li>
+          <li><strong>Load in <code>ryu_project.py</code>:</strong> parse to internal templates; proactively install allow rules; default-deny everything else.</li>
+          <li><strong>Drift:</strong> traffic outside baseline → extra scrutiny (ML + Trust) and potential quarantine.</li>
+        </ul>
+        <!-- NOTE: The current controller code expects "mud_policy.json". If your repo has "mud_policy.py" containing JSON, rename it to .json or adjust the open() path. -->
+
+        <!-- ===== ML Engine ===== -->
+        <h2>8) ML Inference (<code>model_engine.py</code>)</h2>
+        <ul>
+          <li><strong>Model file:</strong> <code>rf_model.pkl</code> (joblib).</li>
+          <li><strong>Signature:</strong> <code>classify_flow({"proto","pkt_len","src_port","dst_port"}) → "benign"|"malicious"|"unknown"</code>.</li>
+          <li><strong>Integration in <code>ryu_project.py</code>:</strong> <code>from model_engine import classify_flow</code>; call only after MUD allows.</li>
+        </ul>
+
+        <!-- ===== Trust / PageRank ===== -->
+        <h2>9) Trust Scoring (PageRank in <code>ryu_project.py</code>)</h2>
+        <p>
+          Maintain <code>trust_graph</code> (directed src→dst edges on allowed flows). Recompute trust with <code>networkx.pagerank()</code> periodically 
+          (e.g., every 20 new edges) and expose via <code>/api/trust</code>.
+        </p>
+
+        <!-- ===== Logging & Telemetry ===== -->
+        <h2>10) Telemetry, Logging & Storage</h2>
+        <ul>
+          <li><strong>Blocked flows:</strong> append to <code>self.blocked_flows</code> (served by <code>/mud/blocked</code>).</li>
+          <li><strong>Counters:</strong> per-device flow verdicts, flood-detect hits, rule install counts, latency.</li>
+          <li><strong>Export:</strong> optional CSV/JSON for the Results page.</li>
+        </ul>
+
+        <!-- ===== Security Model ===== -->
+        <h2>11) Security & Failure Considerations</h2>
+        <ul>
+          <li><strong>Fail-safe:</strong> if ML or MUD data unavailable → default to strict allowlist + rate-limit + alert.</li>
+          <li><strong>REST hardening:</strong> validate inputs; restrict methods; audit overrides.</li>
+          <li><strong>Timeouts:</strong> use <code>idle_timeout</code> to clear stale reactive rules.</li>
+        </ul>
+
+        <!-- ===== Performance ===== -->
+        <h2>12) Performance & Scalability</h2>
+        <ul>
+          <li>Proactive MUD rules reduce PacketIn load.</li>
+          <li>Batch PageRank recomputation (edge threshold) and ML gating (after MUD) prevent hot paths.</li>
+          <li>Meters/groups can rate-limit suspected flows.</li>
+        </ul>
+
+        <!-- ===== Config (project-specific) ===== -->
+        <h2>13) Configuration (Excerpt)</h2>
+        <pre><code>{
+        "openflow": "1.3",
+        "timeouts": { "idle": 60, "hard": 0 },
+        "flood": { "PACKET_THRESHOLD": 1000, "TIME_WINDOW_SEC": 200 },
+        "ml": { "module": "model_engine.py", "model_file": "rf_model.pkl" },
+        "trust": { "recompute_every_edges": 20, "alpha": 0.85 },
+        "mud": { "file": "mud_policy.json", "default_policy": "deny" }
+      }
+        </code></pre>
+
+        <!-- ===== Demo Runbook ===== -->
+        <h2>14) Demo Runbook</h2>
+        <ol>
+          <li>Start controller: <code>ryu-manager ryu_project.py --observe-links</code></li>
+          <li>Launch Mininet: <code>sudo mn --custom topo.py --topo intellihome --controller=remote,ip=127.0.0.1,port=6633 --switch ovs,protocols=OpenFlow13</code></li>
+          <li>Generate benign + attack traffic; watch <em>Demo</em> &amp; <em>Results</em> pages pull from <code>/mud/blocked</code> and <code>/api/trust</code>.</li>
+        </ol>
+
+        <!-- ===== Cross-Page Links ===== -->
+        <h2>15) See Also</h2>
+        <ul>
+          <li><a href="./overview.html">Project Overview</a></li>
+          <li><a href="./ml.html">Machine Learning</a></li>
+          <li><a href="./pagerank.html">Flow Scoring (PageRank)</a></li>
+          <li><a href="./demo.html">Live Demo</a></li>
+          <li><a href="./results_eval.html">Results &amp; Evaluation</a></li>
+        </ul>
+      </section>
+
+
+
+
   </main>
 
   <footer>

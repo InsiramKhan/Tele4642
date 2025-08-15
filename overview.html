@@ -34,24 +34,58 @@
       <h2>Motivation</h2>
       <p>
         As smart homes become more device-rich, traditional networking approaches fall short in enforcing access boundaries or detecting malicious behavior. Common routers lack visibility into device intent, often exposing home networks to IoT-based threats like botnets, data leaks, or unauthorized lateral access.
+        Traditional firewalls lack device-awareness and adaptability. By combining SDN’s centralised control with ML and MUD policies, 
+        this project aims to offer a proactive, adaptive, and transparent security mechanism tailored for IoT environments.
       </p>
     </section>
 
-    <section>
-      <h2>Key Objectives</h2>
-      <ul>
-        <li><strong>Policy Enforcement:</strong> Parse and enforce Manufacturer Usage Description (MUD) JSON profiles to limit device communication strictly to intended targets.</li>
-        <li><strong>Threat Detection:</strong> Train and integrate a real-time machine learning model (Random Forest) to flag and react to suspicious flows.</li>
-        <li><strong>Trust-based Flow Prioritization:</strong> Use PageRank to score flows based on connection patterns, allowing more adaptive control over traffic handling.</li>
-      </ul>
-    </section>
+    <h2>Key Features</h2><br>
+    <ul>
+      <li><strong>SDN-based Central Control:</strong> Centralised policy enforcement and flow monitoring through Ryu.</li>
+      <li><strong>MUD Policy Enforcement:</strong> Automatic behaviour profiling and policy generation for IoT devices.</li>
+      <li><strong>ML-based Anomaly Detection:</strong> Real-time classification of flows as benign or malicious.</li>
+      <li><strong>Trust Scoring with PageRank:</strong> Continuous recalculation of flow trustworthiness.</li>
+      <li><strong>Live Monitoring & Reporting:</strong> Visual and statistical reports for network events.</li>
+    </ul>
 
-    <section>
-      <h2>Stack Summary</h2>
-      <p>
-        The project uses <strong>Mininet</strong> for emulation, <strong>Ryu</strong> for SDN control, and Python-based modules for MUD parsing, ML inference (via <code>scikit-learn</code>), and flow scoring (<code>networkx</code>).
-      </p>
-    </section>
+    
+    <h2>Scope of Work</h2><br>
+      <ol>
+        <li>Design network architecture using Mininet to simulate IoT environments.</li><br>
+        <li>Develop Ryu controller modules for flow collection, policy enforcement, and anomaly response.</li><br>
+        <li>Integrate ML model for flow classification.</li><br>
+        <li>Implement PageRank algorithm for dynamic trust scoring.</li><br>
+        <li>Build web-based front-end for visualising network health, blocked flows, and trust scores.</li><br>
+        <li>Conduct performance evaluation with varied IoT device scenarios.</li><br>
+      </ol>
+    
+    <h2>Relation to TELE4642 Concepts</h2>
+    <p>
+      The project draws heavily on <em>Network Performance</em> topics such as:
+    </p><br>
+    <ul>
+      <li><strong>Queuing Models & Traffic Analysis:</strong> Using arrival/service rate concepts from M/M/1 models.</li>
+      <li><strong>QoS Principles:</strong> Traffic classification, policing, and scheduling.</li>
+      <li><strong>Markov Chains:</strong> Underpinning PageRank’s random walk model.</li>
+      <li><strong>Measurement & Evaluation:</strong> Empirical performance testing for latency, throughput, and detection accuracy.</li>
+    </ul>
+
+    <h2>Expected Outcomes</h2><br>
+    <ul>
+      <li>A functional prototype of an adaptive IoT network firewall and traffic monitor.</li>
+      <li>Demonstrated improvement in malicious flow detection accuracy over static policies.</li>
+      <li>Clear visualisation of trust scores and blocked flows.</li>
+      <li>Comprehensive performance evaluation against multiple traffic scenarios.</li>
+    </ul>
+
+    <h2>Tools & Technologies</h2>
+    <ul>
+      <li>Ryu SDN Controller</li>
+      <li>Mininet Network Emulator</li>
+      <li>Python (for controller logic and ML model integration)</li>
+      <li>Scikit-learn / RandomForestClassfier (for ML inference)</li>
+      <li>Flask / HTML / CSS / JavaScript (for web-based interface)</li>
+    </ul>
   </main>
 
   <footer>

@@ -21,66 +21,133 @@
 </header>
 
   <main class="content-wrapper">
-    <h1>Results & Evaluation</h1>
+    
+          
+      <section id="results-eval">
+          <h1>Results &amp; Evaluation — Screenshot Report</h1>
+          <p>
+            This page presents the experimental outcomes using static screenshots captured during the lab demo.
+            Evidence supports:
+          </p><br>
+            <li>MUD baseline enforcement, </li>
+            <li>ML classification performance, </li>
+            <li>Trust (PageRank) analytics, </li>
+            <li>Controller logs showing decision-making, </li>
 
-    <section>
-      <h2>Machine Learning Metrics</h2>
-      
-      <p><i>
-        The RandomForestClassifier achieved high detection accuracy with a good balance between precision and recall. The model was tested on unseen flows and evaluated using a confusion matrix.
-      </p></section></i>
-      
-    </section>
+          <!-- ===== Submission metadata ===== -->
+          
 
-    <section>
-      <h2>Flow Performance</h2>
-      <ul>
-        <li><strong>Average Flow Setup Time
-        <li><strong>Controller Decision Latency
-        <li><strong>Packet Loss (under attack)
-      </ul>
-    </section>
+          <!-- ===== Quick KPI board (images) ===== -->
+          <h2>1) Headline Outcomes</h2>
+          <p class="hint">
+            Place the screenshots listed below in <code>./assets/results/</code>
+          </p>
+          <div class="grid3">
+            <figure class="card">
+              <img src="./assets/results/mud_vs_final_matrix.png" alt="MUD vs Final Decision Matrix">
+              <figcaption><strong>MUD vs Final Action.</strong> Confirms baseline allow/deny and where ML/Trust intervened beyond MUD.</figcaption>
+            </figure>
+            <figure class="card">
+              <img src="./assets/results/confusion_matrix.png" alt="ML Confusion Matrix">
+              <figcaption><strong>ML Confusion Matrix.</strong> Shows classification performance on labelled flows.“My classifier made no mistakes on the labelled test flows.”</figcaption>
+            </figure>
+            <figure class="card">
+              <img src="./assets/results/roc_curve.png" alt="ROC Curve">
+              <figcaption><strong>ROC Curve.</strong> A plot of True Positive Rate (TPR) vs False Positive Rate (FPR), “Even if I change my detection threshold, the model still distinguishes benign vs malicious traffic extremely well.”.</figcaption>
+            </figure>
+          </div>
 
-    <section>
-      <h2>MUD Policy Enforcement</h2>
-      <p>
-        The controller successfully enforced MUD profiles for all test devices. Unauthorized flows were detected and blocked. Here’s a sample summary:
-      </p>
-      <pre class="code-box">
-{
-  "thermostat": {
-    "expected_targets": ["10.0.0.4"],
-    "violations_blocked": 3,
-    "status": "compliant"
-  },
-  "guest_phone": {
-    "expected_targets": [],
-    "violations_blocked": 6,
-    "status": "flagged"
-  }
-}
-      </pre>
-    </section>
+          <!-- ===== Trust analytics ===== -->
+          <h2>2) Trust (PageRank) Analytics</h2>
+          <div class="grid2">
+            <figure class="card">
+              <img src="./assets/results/trust_top_bottom.png" alt="Top and bottom trust devices">
+              <figcaption><strong>Top/Bottom Devices by Trust.</strong> Cross-checks that low-trust devices see more interventions.</figcaption>
+            </figure>
+          </div>
 
-    <section>
-      <h2>Trust Score Dynamics</h2>
-      <p>
-        PageRank values fluctuated based on interaction patterns. Devices maintaining consistent communication were ranked higher. Here's a timeline view:
-      </p>
-    </section>
+          <!-- ===== Controller evidence ===== -->
+          <h2>5) Controller Evidence (Ryu Logs)</h2>
+          <div class="grid2">
+            <figure class="card">
+              <img src="./assets/results/controller_logs_sample.png" alt="Controller logs">
+              <figcaption><strong>Event Log Snippet.</strong> Shows PacketIn → MUD → ML → Trust → decision → flow_mod.</figcaption>
+            </figure>
+            <figure class="card">
+              <img src="./assets/results/blocked_flows_table.png" alt="Blockedflows table">
+              <figcaption><strong>Blocked/Quarantined Flows.</strong> Concrete examples with timestamps and 5-tuple.</figcaption>
+            </figure>
+          </div>
 
-    <section>
-      <h2>Evaluation Summary</h2>
-      <p>
-        IntelliHome SDN achieved its intended objectives:
-        <ul>
-          <li>Successfully enforced per-device access control via MUD</li>
-          <li>Achieved accurate anomaly detection with minimal latency</li>
-          <li>Added contextual trust scoring to enhance decision logic</li>
-        </ul>
-        The system demonstrates real-time adaptability and scalable architecture suitable for smart homes and potentially small office networks.
-      </p>
-    </section>
+          <!-- ===== Test cases mapping (from your test.sh) ===== -->
+          <h2>6) Test Cases &amp; Screenshots</h2>
+          <p class="hint">Link each test case from <code>test.sh</code> to its evidence image. Update the “Observed” column briefly.</p>
+          <table class="table card">
+            <thead>
+              <tr>
+                <th style="width:20%">Test Case</th>
+                <th style="width:35%">Description</th>
+                <th style="width:25%">Observed Controller Action</th>
+                <th style="width:20%">Screenshot</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>TC1</td>
+                <td>Benign baseline traffic (DNS/HTTPS) from IoT device</td>
+                <td>ALLOW (fast-path installed under MUD allowlist)</td>
+                <td><a href="./assets/results/tc1_benign.png">tc1_benign.png</a></td>
+              </tr>
+              <tr>
+                <td>TC2</td>
+                <td>UDP Flood.</td>
+                <td>BLOCK on 1000+ packets during a UDP flood</td>
+                <td><a href="./assets/results/tc2_udp_flood.png">tc2_udp_flood.png</a></td>
+              </tr>
+              <tr>
+                <td>TC3</td>
+                <td>TCP SYN Flood</td>
+                <td>BLOCK and MALICIOUS</td>
+                <td><a href="./assets/results/tc3_tcp_syn.png">tc3_tcp_syn.png</a></td>
+              </tr>
+              <tr>
+                <td>TC4</td>
+                <td>Flood processing outcome</td>
+                <td>RYU logs</td>
+                <td><a href="./assets/results/tc4_ryu_flood_logs.png">tc4_ryu_flood_logs.png</a></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- ===== Written analysis (short, marker-friendly) ===== -->
+          <h2>7) Observations &amp; Analysis</h2>
+          <div class="card">
+            <p><strong>MUD Baseline:</strong> Screenshots confirm that device-specific allowlists prevent off-policy flows (see “MUD vs Final Action”).</p>
+            <p><strong>ML/Trust Added Value:</strong> Cases where <em>MUD=ALLOW</em> but the controller mitigates/blocks show the ML/Trust layer catching anomalies beyond static policy.</p>
+            <p><strong>Performance Behaviour:</strong> During test bursts confusion matrix/ROC indicate reliable separation of benign vs malicious flows. A curve close to the top-left corner indicates strong performance with high detection rates with few false alarms.</p>
+            <p><strong>Trust Correlation:</strong> Low-trust devices (PageRank) align with higher intervention rates, supporting prioritised scrutiny.</p>
+          </div>
+
+          <!-- ===== Minimal styling ===== -->
+          <style>
+            .card{background:#1013180d;border:1px solid #0001;border-radius:12px;padding:16px;margin:12px 0}
+            .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+            .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+            figure{margin:0} figure img{width:100%;height:auto;border-radius:10px;display:block}
+            figure figcaption{font-size:.95rem;line-height:1.45;margin-top:8px}
+            .hint{opacity:.85;font-size:.9rem}
+            .meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+            .table{width:100%;border-collapse:collapse}
+            .table th,.table td{border-bottom:1px solid #0002;padding:8px}
+            @media (max-width:1000px){.grid3{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}}
+          </style>
+        </section>
+
+
+
+
+
+
   </main>
 
   <footer>
