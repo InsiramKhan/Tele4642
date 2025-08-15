@@ -64,7 +64,7 @@ ML/Trust layer: mitigates anomalies even when MUD would allow, using a classifie
 
  
 # License & Acknowledgements
-License: 
+License: Not yet
 Acknowledgements: UNSW TELE4642 materials; Ryu SDN framework; Mininet.
 
 # Contact
