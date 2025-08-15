@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SDN Flow Dashboard</title>
+    <style>
+        body { font-family: Arial; margin: 40px; background-color: #f4f4f4; }
+        h1 { color: #333; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        tr:nth-child(even){background-color: #f9f9f9;}
+        th { background-color: #4CAF50; color: white; }
+        .malicious { background-color: #fdd !important; }
+        .benign { background-color: #dfd !important; }
+    </style>
+</head>
+<body>
+    <h1>SDN Flow Monitor</h1>
+    <p><b>Latest Flow Logs</b></p>
+    <table id="flow-table">
+        <thead>
+            <tr>
+                <th>Time</th><th>Source IP</th><th>Destination IP</th>
+                <th>Protocol</th><th>Length</th><th>ML Decision</th><th>MUD Status</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <h2>Host Trust Scores (PageRank)</h2>
+    <table id="trust-table">
+        <thead>
+            <tr><th>Host</th><th>Score</th></tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+<script>
+function refreshFlows() {
+    fetch('/api/flows')
+        .then(response => response.json())
+        .then(data => {
+            let tbody = document.querySelector("#flow-table tbody");
+            tbody.innerHTML = "";
+            data.slice(-100).reverse().forEach(flow => {
+                let row = document.createElement("tr");
+                row.className = flow.ml === "malicious" ? "malicious" : "benign";
+                row.innerHTML = `
+                    <td>${new Date(parseFloat(flow.time) * 1000).toLocaleTimeString()}</td>
+                    <td>${flow.src}</td>
+                    <td>${flow.dst}</td>
+                    <td>${flow.proto}</td>
+                    <td>${flow.len}</td>
+                    <td>${flow.ml}</td>
+                    <td>${flow.mud}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        });
+}
+
+function refreshTrust() {
+    fetch('/api/trust')
+        .then(response => response.json())
+        .then(data => {
+            let tbody = document.querySelector("#trust-table tbody");
+            tbody.innerHTML = "";
+            Object.entries(data).sort((a,b) => b[1]-a[1]).forEach(([ip, score]) => {
+                let row = document.createElement("tr");
+                row.innerHTML = `<td>${ip}</td><td>${score.toFixed(4)}</td>`;
+                tbody.appendChild(row);
+            });
+        });
+}
+
+setInterval(() => {
+    refreshFlows();
+    refreshTrust();
+}, 3000);
+
+refreshFlows();
+refreshTrust();
+</script>
+</body>
+</html>
